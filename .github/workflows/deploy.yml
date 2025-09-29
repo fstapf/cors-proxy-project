@@ -38,13 +38,29 @@ jobs:
           echo "✅ CLOUDFLARE_ACCOUNT_ID is configured: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
         fi
 
+    - name: Debug wrangler setup
+      run: |
+        echo "🔧 Debugging wrangler setup..."
+        npx wrangler --version || echo "Failed to get wrangler version"
+        echo "📋 Current directory contents:"
+        ls -la
+        echo "📄 Wrangler config:"
+        cat wrangler.toml
+        echo "📄 Worker code (first 20 lines):"
+        head -20 worker/index.js
+
+    - name: Validate wrangler config
+      run: |
+        echo "🔍 Validating wrangler configuration..."
+        npx wrangler whoami || echo "Failed to authenticate"
+
     - name: Deploy to Cloudflare Workers
-      uses: cloudflare/wrangler-action@v3
-      with:
-        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        command: deploy
-        workingDirectory: '.'
+      run: |
+        echo "🚀 Deploying with verbose output..."
+        npx wrangler deploy --compatibility-date=2024-01-01 --verbose
+      env:
+        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
   test:
     runs-on: ubuntu-latest

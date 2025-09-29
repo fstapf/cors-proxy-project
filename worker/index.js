@@ -18,7 +18,7 @@ const CORS_HEADERS = {
 // Headers adicionais para todas as respostas
 const ADDITIONAL_HEADERS = {
   'X-Proxy-By': 'Cloudflare-Worker',
-  'X-API-Base': u76DY2SdpswhLVKEqe5mB039aX1frEuxv3aSJl9S,
+  'X-API-Base': API_BASE_URL,
 };
 
 export default {
