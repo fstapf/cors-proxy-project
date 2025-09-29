@@ -1,0 +1,67 @@
+name: Deploy Cloudflare Worker
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy Worker
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Deploy to Cloudflare Workers
+      if: github.ref == 'refs/heads/main'
+      uses: cloudflare/wrangler-action@v3
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        command: deploy --env production
+
+    - name: Deploy to development (PR)
+      if: github.event_name == 'pull_request'
+      uses: cloudflare/wrangler-action@v3
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        command: deploy --env development
+
+  test:
+    runs-on: ubuntu-latest
+    name: Test Worker
+    needs: deploy
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Test deployed worker
+      run: |
+        echo "🧪 Testing deployed worker..."
+        WORKER_URL="https://cors-proxy.${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.workers.dev"
+
+        # Test OPTIONS request (CORS preflight)
+        curl -X OPTIONS "$WORKER_URL/api/test" \
+          -H "Origin: https://example.com" \
+          -H "Access-Control-Request-Method: GET" \
+          -H "Access-Control-Request-Headers: Content-Type" \
+          -v
+
+        # Test GET request
+        curl -X GET "$WORKER_URL/api/test" \
+          -H "Accept: application/json" \
+          -v
+
+        echo "✅ Worker test completed"

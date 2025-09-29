@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Proxy Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #005a87;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .response {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 API Proxy Test</h1>
+
+        <div class="info">
+            <strong>📡 API Base URL:</strong> https://dev.ipes.tech<br>
+            <strong>🔗 Proxy Worker:</strong> <span id="workerUrl">Detectando...</span><br>
+            <strong>🌐 Environment:</strong> <span id="environment">Detectando...</span>
+        </div>
+
+        <div>
+            <button onclick="testApi('/api/test')" id="testBtn">🧪 Test API (/api/test)</button>
+            <button onclick="testApi('/api/health')" id="healthBtn">❤️ Health Check (/api/health)</button>
+            <button onclick="testApi('/api/status')" id="statusBtn">📊 Status (/api/status)</button>
+            <button onclick="clearResponse()" id="clearBtn">🗑️ Clear</button>
+        </div>
+
+        <div id="status" class="status" style="display: none;"></div>
+        <div id="response" class="response" style="display: none;"></div>
+    </div>
+
+    <script>
+        // Detectar ambiente e configurar URL base
+        const isGitHubPages = window.location.hostname.includes('github.io');
+        const baseUrl = isGitHubPages
+            ? `https://${window.location.hostname.split('.')[0]}-cors-proxy.${window.location.hostname.split('.')[0]}.workers.dev`
+            : window.location.origin;
+
+        document.getElementById('workerUrl').textContent = baseUrl;
+        document.getElementById('environment').textContent = isGitHubPages ? 'GitHub Pages' : 'Local Development';
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+        }
+
+        function showResponse(data) {
+            const responseDiv = document.getElementById('response');
+            responseDiv.textContent = JSON.stringify(data, null, 2);
+            responseDiv.style.display = 'block';
+        }
+
+        function clearResponse() {
+            document.getElementById('response').style.display = 'none';
+            document.getElementById('status').style.display = 'none';
+        }
+
+        async function testApi(endpoint) {
+            const url = `${baseUrl}${endpoint}`;
+
+            showStatus(`🔄 Fazendo requisição para: ${url}`, 'loading');
+
+            // Desabilitar botões durante requisição
+            document.querySelectorAll('button').forEach(btn => btn.disabled = true);
+
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const responseData = {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    url: response.url,
+                    body: null
+                };
+
+                try {
+                    responseData.body = await response.json();
+                } catch {
+                    responseData.body = await response.text();
+                }
+
+                if (response.ok) {
+                    showStatus(`✅ Sucesso! Status: ${response.status}`, 'success');
+                } else {
+                    showStatus(`⚠️ Erro HTTP! Status: ${response.status} - ${response.statusText}`, 'error');
+                }
+
+                showResponse(responseData);
+
+            } catch (error) {
+                showStatus(`❌ Erro na requisição: ${error.message}`, 'error');
+                showResponse({
+                    error: error.message,
+                    stack: error.stack,
+                    url: url,
+                    timestamp: new Date().toISOString()
+                });
+            } finally {
+                // Reabilitar botões
+                document.querySelectorAll('button').forEach(btn => btn.disabled = false);
+            }
+        }
+
+        // Teste automático ao carregar a página
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                console.log('🚀 Página carregada! Ambiente:', isGitHubPages ? 'GitHub Pages' : 'Local');
+                console.log('🔗 Base URL:', baseUrl);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

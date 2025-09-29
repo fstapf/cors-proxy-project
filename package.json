@@ -1,0 +1,29 @@
+{
+  "name": "cors-proxy-github-pages",
+  "version": "1.0.0",
+  "description": "CORS Proxy para GitHub Pages usando Cloudflare Workers",
+  "main": "worker/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:dev": "wrangler deploy --env development",
+    "deploy:prod": "wrangler deploy --env production",
+    "tail": "wrangler tail",
+    "test": "wrangler dev --test-only"
+  },
+  "keywords": [
+    "cors",
+    "proxy",
+    "cloudflare",
+    "workers",
+    "github-pages"
+  ],
+  "author": "Seu Nome",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
