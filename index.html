@@ -104,9 +104,19 @@
     <script>
         // Detectar ambiente e configurar URL base
         const isGitHubPages = window.location.hostname.includes('github.io');
-        const baseUrl = isGitHubPages
-            ? `https://${window.location.hostname.split('.')[0]}-cors-proxy.${window.location.hostname.split('.')[0]}.workers.dev`
-            : window.location.origin;
+
+        // Configuração da URL do Cloudflare Worker
+        // Para GitHub Pages: https://cors-proxy.ACCOUNT_ID.workers.dev
+        // Para desenvolvimento local: http://localhost:8787
+        let baseUrl;
+
+        if (isGitHubPages) {
+            // URL do Cloudflare Worker com seu Account ID
+            baseUrl = 'https://cors-proxy.ae47374e44fd38f6903ee4bf5afa4ce0.workers.dev';
+        } else {
+            // Desenvolvimento local
+            baseUrl = 'http://localhost:8787';
+        }
 
         document.getElementById('workerUrl').textContent = baseUrl;
         document.getElementById('environment').textContent = isGitHubPages ? 'GitHub Pages' : 'Local Development';

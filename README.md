@@ -58,6 +58,25 @@ O deploy é automático a cada push na branch `main`. Verifique o progresso na a
 
 ## ⚙️ Configuração da API
 
+### Configurar URL do Cloudflare Worker
+
+**IMPORTANTE**: Após o primeiro deploy, você precisa configurar a URL correta do worker no `index.html`.
+
+1. **Encontre seu Account ID:**
+   - Vá para o Cloudflare Dashboard
+   - No lado direito, seção "API" → copie o Account ID
+
+2. **Edite o arquivo `index.html`** (linhas 119-120):
+   ```javascript
+   // Substitua SUA_CONTA_ID pelo seu Account ID real:
+   baseUrl = 'https://cors-proxy.SUA_CONTA_ID.workers.dev';
+   ```
+
+3. **Ou use a URL custom domain** (se configurou):
+   ```javascript
+   baseUrl = 'https://cors-proxy.workers.dev';
+   ```
+
 ### Trocar a URL da API Externa
 
 Edite o arquivo `worker/index.js`:
